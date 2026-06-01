@@ -1,0 +1,64 @@
+.hero-banner {
+  height: 350px;
+
+  margin: 20px;
+
+  border-radius: 12px;
+
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.9),
+    rgba(0,0,0,0.4)
+  );
+
+  background-color: #202020;
+
+  display: flex;
+  align-items: center;
+
+  padding-left: 50px;
+}
+
+.hero-content {
+  max-width: 500px;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.hero-content p {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.watch-btn {
+  background: #e50914;
+  color: white;
+
+  border: none;
+
+  padding: 12px 20px;
+
+  border-radius: 5px;
+
+  font-weight: bold;
+}
+
+.info-btn {
+  background: #444;
+
+  color: white;
+
+  border: none;
+
+  padding: 12px 20px;
+
+  border-radius: 5px;
+}

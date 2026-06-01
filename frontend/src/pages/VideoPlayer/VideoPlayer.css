@@ -1,0 +1,39 @@
+.player-container {
+  min-height: 100vh;
+
+  background-color: #0f0f0f;
+
+  color: white;
+
+  padding: 30px;
+}
+
+.video-section {
+  max-width: 1000px;
+
+  margin: auto;
+}
+
+.video-placeholder {
+  height: 500px;
+
+  background-color: #181818;
+
+  border-radius: 12px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 24px;
+
+  margin-bottom: 20px;
+}
+
+.video-section h1 {
+  margin-bottom: 10px;
+}
+
+.video-section p {
+  color: #aaaaaa;
+}
