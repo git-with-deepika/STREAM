@@ -2,35 +2,31 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-// ==========================================
-// 1. THE .ENV SETUP (ACTIVATION)
-// This line immediately goes to your local `.env` file, 
-// reads "PORT=value", and injects it into Node's memory.
-// ==========================================
 dotenv.config();
 
 const app = express();
 
-
-// ==========================================
-// 2. THE CORS SETUP (ACTIVATION)
-// This unlocks your backend server. It tells the browser:
-// "Accept incoming API requests from other origins (like port 5173)."
-// ==========================================
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Root Route
 app.get("/", (req, res) => {
   res.send("StreamNest API Running");
 });
 
+// Health Check Route
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Backend is healthy",
+  });
+});
 
-// ==========================================
-// 3. THE .ENV SETUP (USAGE)
-// Instead of hardcoding port, your code safely pulls 
-// the value that `dotenv` loaded into `process.env.P
+// Port
 const PORT = process.env.PORT || 5000;
 
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
