@@ -4,155 +4,200 @@ import jwt from "jsonwebtoken";
 
 // Register User
 export const registerUser = async (req, res) => {
-try {
-const { username, email, password } = req.body;
+  try {
+    const { username, email, password } = req.body;
 
+    // Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
 
-if (!username || !email || !password) {
-  return res.status(400).json({
-    success: false,
-    message: "All fields are required",
-  });
-}
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
 
-if (!emailRegex.test(email)) {
-  return res.status(400).json({
-    success: false,
-    message: "Invalid email format",
-  });
-}
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
 
-if (password.length < 6) {
-  return res.status(400).json({
-    success: false,
-    message: "Password must be at least 6 characters",
-  });
-}
+    // Check existing user
+    const existingUser = await User.findOne({ email });
 
-const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
 
-if (existingUser) {
-  return res.status(400).json({
-    success: false,
-    message: "User already exists",
-  });
-}
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-const hashedPassword = await bcrypt.hash(password, 10);
+    // Create User
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
 
-const user = await User.create({
-  username,
-  email,
-  password: hashedPassword,
-});
-
-res.status(201).json({
-  success: true,
-  message: "User Registered Successfully",
-  user,
-});
-
-
-} catch (error) {
-res.status(500).json({
-success: false,
-message: error.message,
-});
-}
+    res.status(201).json({
+      success: true,
+      message: "User Registered Successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 // Login User
 export const loginUser = async (req, res) => {
-try {
-const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and Password are required",
+      });
+    }
 
-if (!email || !password) {
-  return res.status(400).json({
-    success: false,
-    message: "Email and Password are required",
-  });
-}
+    const user = await User.findOne({ email });
 
-const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-if (!user) {
-  return res.status(400).json({
-    success: false,
-    message: "User not found",
-  });
-}
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
-const isMatch = await bcrypt.compare(
-  password,
-  user.password
-);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
 
-if (!isMatch) {
-  return res.status(400).json({
-    success: false,
-    message: "Invalid credentials",
-  });
-}
+    // Generate JWT
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
 
-const token = jwt.sign(
-  {
-    id: user._id,
-    email: user.email,
-  },
-  process.env.JWT_SECRET,
-  {
-    expiresIn: "7d",
+    res.status(200).json({
+      success: true,
+      message: "Login Successful",
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-);
-
-res.status(200).json({
-  success: true,
-  message: "Login Successful",
-  token,
-  user: {
-    _id: user._id,
-    username: user.username,
-    email: user.email,
-    profilePic: user.profilePic,
-  },
-});
-
-
-} catch (error) {
-res.status(500).json({
-success: false,
-message: error.message,
-});
-}
 };
 
 // Get Profile
 export const getProfile = async (req, res) => {
-try {
-const user = await User.findById(req.user.id)
-.select("-password");
+  try {
+    const user = await User.findById(req.user.id)
+      .select("-password");
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-if (!user) {
-  return res.status(404).json({
-    success: false,
-    message: "User not found",
-  });
-}
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
-res.status(200).json({
-  success: true,
-  user,
-});
+// Update Profile
+export const updateProfile = async (req, res) => {
+  try {
+    console.log("req.user =", req.user);
 
+    const { username, profilePic } = req.body;
 
-} catch (error) {
-res.status(500).json({
-success: false,
-message: error.message,
-});
-}
+    const user = await User.findById(req.user.id);
+
+    console.log("Mongo User =", user);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (username) {
+      user.username = username;
+    }
+
+    if (profilePic) {
+      user.profilePic = profilePic;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile Updated Successfully",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic,
+      },
+    });
+  } catch (error) {
+    console.log("UPDATE PROFILE ERROR:");
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
